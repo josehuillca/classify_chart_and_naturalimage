@@ -13,6 +13,7 @@ class MyDataModule(LightningDataModule):
         self.image_size = image_size
         self.batch_size = batch_size
         self.num_workers = num_workers
+        self.class_names = None
 
 
     def setup(self, stage: Optional[str] = None) -> None:
@@ -28,9 +29,11 @@ class MyDataModule(LightningDataModule):
         if stage == 'fit' or stage is None: # TODO: dividir o trainset para val_subset
             self.train_subset = datasets.ImageFolder(os.path.join(self.root, 'training_set'), transform=train_transform)
             self.val_subset = datasets.ImageFolder(os.path.join(self.root, 'test_set'), transform=test_transform)
+            self.class_names = self.val_subset.classes
             
         if stage == 'test' or stage is None: 
             self.test_subset = datasets.ImageFolder(os.path.join(self.root, 'test_set'), transform=test_transform)
+            self.class_names = self.test_subset.classes
 
     def train_dataloader(self) -> DataLoader:
         return DataLoader(self.train_subset, batch_size=self.batch_size, shuffle=True, num_workers=self.num_workers, pin_memory=True, drop_last=True)
