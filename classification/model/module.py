@@ -7,7 +7,7 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 from typing import Dict, List, Tuple, Union
 import operator
 import torch, torchmetrics
-from ..typing_ import ImageBatch, Logits
+from ..typing_ import ImageBatch, Logits, Targets
 
 
 class ClassificationModule(LightningModule):
@@ -37,6 +37,8 @@ class ClassificationModule(LightningModule):
     def forward(self, images: ImageBatch) -> Logits:
         return self.net(images)
 
+    def _common_step(self, batch: Tuple[ImageBatch, Targets]) -> Dict[str, Tensor]:
+        pass
 
 def train_step(model: torch.nn.Module, 
                dataloader: torch.utils.data.DataLoader, 
