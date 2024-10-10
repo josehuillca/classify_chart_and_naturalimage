@@ -1,4 +1,42 @@
-import torch
+from pytorch_lightning import LightningModule
+from pytorch_lightning.callbacks import Callback, EarlyStopping
+from torch import Tensor
+from torch.nn import Module, CrossEntropyLoss
+from torch.optim import SGD
+from torch.optim.lr_scheduler import ReduceLROnPlateau
+from typing import Dict, List, Tuple, Union
+import operator
+import torch, torchmetrics
+from ..typing_ import ImageBatch, Logits
+
+
+class ClassificationModule(LightningModule):
+
+    def __init__(self, net: Module, *, lr: float) -> None:
+        super().__init__()
+        self.save_hyperparameters(ignore=['net'])  # Ignoramos o hyperparâmetro `net` por se tratar da instância da rede e não de valores simples escolhidos para treino ou configuração da rede.
+        self.net = net
+        self.lr = lr
+        self.criterion = CrossEntropyLoss()
+
+    def configure_callbacks(self) -> List[Callback]:
+        return [EarlyStopping(monitor='Accuracy/Val', mode='max', patience=6, strict=False)]  # O argumento strict=False é necessário para poder reiniciar o treinamento de onde parou anteriormente.
+
+    def configure_optimizers(self):
+        optimizer = torch.optim.Adam(params=self.net.parameters(), lr=self.lr)
+        lr_scheduler = ReduceLROnPlateau(optimizer, mode='max', factor=0.1, patience=5)
+        return {
+            'optimizer': optimizer,
+            'lr_scheduler': {
+                'scheduler': lr_scheduler,
+                'monitor': 'Accuracy/Val',
+                'strict': False,  # O argumento strict=False é necessário para poder reiniciar o treinamento de onde parou anteriormente.
+            }
+        }
+    
+    def forward(self, images: ImageBatch) -> Logits:
+        return self.net(images)
+
 
 def train_step(model: torch.nn.Module, 
                dataloader: torch.utils.data.DataLoader, 

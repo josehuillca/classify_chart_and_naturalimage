@@ -235,7 +235,7 @@ if __name__=="__main__":
 
     # Train and Evaluate Model =======================================
     # Set number of epochs
-    NUM_EPOCHS = 5
+    NUM_EPOCHS = 1
 
     # Setup loss function and optimizer
     loss_fn = torch.nn.CrossEntropyLoss()
