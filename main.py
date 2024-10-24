@@ -41,11 +41,15 @@ def main(args: argparse.Namespace) -> None:
         num_sanity_val_steps=0,  # Evita que testes de sanidade sobre os dados de validação sejam executados antes do treino.
     )
 
+    #TODO:load ckpt
+
     if args.task == 'fit':
-        trainer.fit(model=model, datamodule=datamodule, ckpt_path=args.checkpoint)
+        trainer.fit(model=model, datamodule=datamodule)
+        print(f"Saving checkpoint in: {args.checkpoint}")
+        if not os.path.exists(args.checkpoint): os.makedirs(args.checkpoint,exist_ok=True)
+        trainer.save_checkpoint(os.path.join(args.checkpoint, f"weights.ckpt"), weights_only=True)
     else:
-        trainer.test(model=model, datamodule=datamodule, ckpt_path=args.checkpoint)
-    print("Class-names: ", datamodule.class_names)
+        trainer.test(model=model, datamodule=datamodule)
 
 
 if __name__=="__main__":
@@ -69,6 +73,6 @@ if __name__=="__main__":
     group = group.add_argument_group(title='Model')
     group.add_argument('--lr', metavar='VALUE', type=float, default=1e-3, help='learning rate')
     group.add_argument('--max_epochs', metavar='COUNT', type=int, default=5, help='maximum number of epochs')
-    group.add_argument('--checkpoint', metavar='PATH', type=str, default=None, help='path to some checkpoint (all other model arguments will be ignored)')
+    group.add_argument('--checkpoint', metavar='PATH', type=str, default="./output", help='path to some checkpoint (all other model arguments will be ignored)')
     # Chamar o método principal.
     main(parser.parse_args())

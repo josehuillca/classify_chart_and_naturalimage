@@ -164,3 +164,4 @@ cython_debug/
 dataset/*
 wandb/*
 Classifier-naturalImages/*
+output/*
