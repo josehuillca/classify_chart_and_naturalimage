@@ -165,3 +165,4 @@ dataset/*
 wandb/*
 Classifier-naturalImages/*
 output/*
+checkpoints/*

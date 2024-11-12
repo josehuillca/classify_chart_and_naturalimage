@@ -10,6 +10,7 @@ from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog
 
 
+PATH_OpenImagesV7 = '/home/hillai360/Downloads/output/validation'
 IMG_WIDTH, IMG_HEIGHT = 500,500
 MAX_IMAGES = 6000
 
@@ -148,13 +149,13 @@ def main_pqt5():
     del idxs
 
 
-def create_database(train=0.8, path_save='./dataset/naturalchart'):
+def create_database(train=0.9, path_save='../dataset/naturalchart'):
     def create(list_imgs, classe, maximo):
         idxs = [i for i in range(len(list_imgs))]
         np.random.shuffle(idxs)
 
         path_test = op.join(path_save, 'test_set', classe)
-        path_train = op.join(path_save, 'train_set', classe)
+        path_train = op.join(path_save, 'training_set', classe)
         if not op.exists(path_test): os.makedirs(path_test,exist_ok=True)
         if not op.exists(path_train): os.makedirs(path_train,exist_ok=True)
         for i in idxs[:int(maximo*train)]:
@@ -162,8 +163,8 @@ def create_database(train=0.8, path_save='./dataset/naturalchart'):
         for i in idxs[int(maximo*train):maximo]:
             shutil.copyfile(list_imgs[i], op.join(path_test,op.basename(list_imgs[i])))
 
-    path_base = './output'
-    csv_list = ['Engineering.csv', 'Decision Sciences.csv', 'Business, Management and Accounting.csv', 'Validation_all.csv']
+    path_base = '../output'
+    csv_list = ['Engineering.csv', 'Decision Sciences.csv', 'Business, Management and Accounting.csv']#, 'Validation_all.csv']
     list_natural, list_chart, list_neutra = list(),list(),list()
     for csv in csv_list:
         df = pd.read_csv(op.join(path_base, csv), header=None, sep='#')
@@ -173,9 +174,16 @@ def create_database(train=0.8, path_save='./dataset/naturalchart'):
         list_natural += df_natural[0].to_list()
         list_chart += df_chart[0].to_list()
         list_neutra += df_neutro[0].to_list()
-    # Copiamos as imagens
-    create(list_natural, 'natural', len(list_natural))
-    create(list_chart, 'chart', len(list_natural))
+    pass
+    # Copiamos as imagens ===================================
+    # temporal
+    adding_new_images = 1700
+    #create(list_natural, 'natural', len(list_natural))
+    #create(list_chart, 'chart', adding_new_images)
+    # Agregamos mais imagens naturales do dataset : OpenImagesV7
+    list_natural_OpenImagesV7 = [op.join(PATH_OpenImagesV7,file) for file in os.listdir(PATH_OpenImagesV7)]
+    create(list_natural_OpenImagesV7, 'natural', adding_new_images)
+    #create(list_neutra, 'neutro', 100)
 
 
 if __name__=="__main__":

@@ -3,6 +3,8 @@ from torch.utils.data import DataLoader
 from pytorch_lightning import LightningDataModule
 from typing import Optional, Tuple
 from torchvision import datasets, transforms
+from torchvision.transforms.functional import InterpolationMode
+from .randaugment import RandomAugment
 
 
 class MyDataModule(LightningDataModule):
@@ -17,7 +19,9 @@ class MyDataModule(LightningDataModule):
 
 
     def setup(self, stage: Optional[str] = None) -> None:
-        # Create training transform with TrivialAugment
+        min_scale=0.5
+        normalize = transforms.Normalize((0.48145466, 0.4578275, 0.40821073), (0.26862954, 0.26130258, 0.27577711))
+        """# Create training transform with TrivialAugment
         train_transform = transforms.Compose([
                             transforms.Resize(self.image_size),
                             transforms.TrivialAugmentWide(),
@@ -26,6 +30,20 @@ class MyDataModule(LightningDataModule):
         test_transform = transforms.Compose([
                             transforms.Resize(self.image_size),
                             transforms.ToTensor()])
+        """
+        train_transform = transforms.Compose([                        
+            transforms.RandomResizedCrop(self.image_size,scale=(min_scale, 1.0),interpolation=InterpolationMode.BICUBIC),
+            transforms.RandomHorizontalFlip(),
+            RandomAugment(2,5,isPIL=True,augs=['Identity','AutoContrast','Brightness','Sharpness','Equalize',
+                                              'ShearX', 'ShearY', 'TranslateX', 'TranslateY', 'Rotate']),     
+            transforms.ToTensor(),
+            normalize,
+        ])        
+        test_transform = transforms.Compose([
+            transforms.Resize(self.image_size,interpolation=InterpolationMode.BICUBIC),
+            transforms.ToTensor(),
+            normalize,
+            ]) 
         if stage == 'fit' or stage is None: # TODO: dividir o trainset para val_subset
             self.train_subset = datasets.ImageFolder(os.path.join(self.root, 'training_set'), transform=train_transform)
             self.val_subset = datasets.ImageFolder(os.path.join(self.root, 'test_set'), transform=test_transform)

@@ -1,9 +1,13 @@
 import argparse, os
+import pytorch_lightning as pl
 from pytorch_lightning import Trainer
 from pytorch_lightning.loggers import WandbLogger
 from classification.nn.model import ImageClassifier
 from classification.model.module import ClassificationModule
 from classification.data.datamodule import MyDataModule
+
+from PIL import ImageFile
+ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 
 def understanding_model(model, image_width, image_height):
@@ -19,6 +23,7 @@ def understanding_model(model, image_width, image_height):
 
 
 def main(args: argparse.Namespace) -> None:
+    pl.seed_everything(42, workers=True)
     # Set image size.
     IMAGE_WIDTH = 224
     IMAGE_HEIGHT = 224
@@ -45,9 +50,9 @@ def main(args: argparse.Namespace) -> None:
 
     if args.task == 'fit':
         trainer.fit(model=model, datamodule=datamodule)
-        print(f"Saving checkpoint in: {args.checkpoint}")
-        if not os.path.exists(args.checkpoint): os.makedirs(args.checkpoint,exist_ok=True)
-        trainer.save_checkpoint(os.path.join(args.checkpoint, f"weights.ckpt"), weights_only=True)
+        #print(f"Saving checkpoint in: {args.checkpoint}")
+        #if not os.path.exists(args.checkpoint): os.makedirs(args.checkpoint,exist_ok=True)
+        #trainer.save_checkpoint(os.path.join(args.checkpoint, f"weights.ckpt"), weights_only=True)
     else:
         trainer.test(model=model, datamodule=datamodule)
 
@@ -68,11 +73,11 @@ if __name__=="__main__":
     group = parser.add_argument_group(title='Data')
     group.add_argument('--batch_size', metavar='SIZE', type=int, default=32, help='size of the bach of images')
     group.add_argument('--num_workers', metavar='COUNT', type=int, default=2, help='number of workers used to load the image batches')
-    group.add_argument('--dataset_root', metavar='PATH', type=str, default=os.path.join('.', 'dataset/catdog'), help='root dir for all datasets')
+    group.add_argument('--dataset_root', metavar='PATH', type=str, default=os.path.join('.', 'dataset/naturalchart'), help='root dir for all datasets')
     # Definir argumentos relacionados com o modelo.
     group = group.add_argument_group(title='Model')
-    group.add_argument('--lr', metavar='VALUE', type=float, default=1e-3, help='learning rate')
-    group.add_argument('--max_epochs', metavar='COUNT', type=int, default=5, help='maximum number of epochs')
+    group.add_argument('--lr', metavar='VALUE', type=float, default=1e-5, help='learning rate')
+    group.add_argument('--max_epochs', metavar='COUNT', type=int, default=100, help='maximum number of epochs')
     group.add_argument('--checkpoint', metavar='PATH', type=str, default="./output", help='path to some checkpoint (all other model arguments will be ignored)')
     # Chamar o método principal.
     main(parser.parse_args())
