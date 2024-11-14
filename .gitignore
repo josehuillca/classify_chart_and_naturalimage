@@ -166,3 +166,4 @@ wandb/*
 Classifier-naturalImages/*
 output/*
 checkpoints/*
+.vscode/*
