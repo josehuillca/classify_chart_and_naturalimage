@@ -20,10 +20,16 @@ def get_jsonfile_from_path(path:str):
     return glob.glob(op.join(path, '**/*.json'), recursive = True)
 
 
-def inference_naturalchart(model, list_jsonfile, dst_path:str):
+def inference_naturalchart(model, list_jsonfile, count_dict, dst_path:str):
+    #count_dict = dict()
     for file in tqdm(list_jsonfile, desc="      Inference"):
         with open(file) as f:
             data = json.load(f)
+        if data["figure"]["figure_type"] is not None: 
+            primary_lvl = data['image']['file'].split("/")[2]
+            if not (primary_lvl in count_dict): count_dict[primary_lvl] = {"natural": 0, "chart": 0}
+            count_dict[primary_lvl][data["figure"]["figure_type"]] += 1
+            continue
         img_path = op.join(op.dirname(file), op.basename(data['image']['file']))
 
         if not op.exists(img_path): # Algumas imagens nao foram baixadas
@@ -53,9 +59,9 @@ def inference_naturalchart(model, list_jsonfile, dst_path:str):
                 refid=data['figure']['refid'],
                 caption=data['figure']['caption'],
                 figure_type=figure_type,
-                chart_type=None,
-                contain_subfigure=None,
-                bbox_subfigure=None
+                chart_type=None if not ("chart_type" is data['figure']) else data['figure']['chart_type'],
+                contain_subfigure=None if not ("contain_subfigure" is data['figure']) else data['figure']['contain_subfigure'],
+                bbox_subfigure=None if not ("bbox_subfigure" is data['figure']) else data['figure']['bbox_subfigure'],
             ),
             'image': Image(
                 ref=data['image']['ref'],
@@ -70,11 +76,13 @@ def inference_naturalchart(model, list_jsonfile, dst_path:str):
             'paragraphs': [Paragraph(id=p['id'],text=p['text']) for p in data['paragraphs']['paragraphs']]
         }
         # 
-        path_out = op.join(ROOT_DST, op.dirname(op.join('dataset', data['image']['file'].split('dataset/')[1])))
-        if not op.exists(path_out): os.makedirs(path_out, exist_ok=True)
-        with open(op.join(path_out, op.basename(file)), 'w', encoding='utf-8') as fout:
+        #path_out = op.join(ROOT_DST, op.dirname(op.join('dataset', data['image']['file'].split('dataset/')[1])))
+        #if not op.exists(path_out): os.makedirs(path_out, exist_ok=True)
+        #with open(op.join(path_out, op.basename(file)), 'w', encoding='utf-8') as fout:
+        with open(file, 'w', encoding='utf-8') as fout:
             json.dump(new_dict, fout, ensure_ascii=False)
         pass
+    #print(count_dict)
 
 
 if __name__=='__main__':
@@ -90,8 +98,9 @@ if __name__=='__main__':
 
     dst_path = ''
 
-    base_path, p_lvl = get_primary_level_list()
-    for name in tqdm(p_lvl, desc="  Primary-lvl"):
-        list_json = get_jsonfile_from_path(op.join(ROOT,base_path,name))
-        inference_naturalchart(model_naturalchart, list_json, dst_path)
-    print('Finish', p_lvl)
+    #base_path, p_lvl = get_primary_level_list()
+    count_dic = dict()
+    for split in tqdm(["test", "val", "train"], desc=" Split"):
+        list_json = get_jsonfile_from_path(op.join("/home/hillai360/Documentos/Mango/elseivier/split/ElsCap",split))
+        inference_naturalchart(model_naturalchart, list_json, count_dic, dst_path)
+    print('Finish', count_dic)
